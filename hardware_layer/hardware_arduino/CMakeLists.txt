@@ -136,7 +136,7 @@ include_directories(
 # add_dependencies(hardware_arduino ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-#add_executable(arduino_node src/arduino_node.cpp)
+# add_executable(hardware_arduino_node src/hardware_arduino_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -160,6 +160,8 @@ rosserial_configure_client(
 rosserial_add_client_target(src arduino_node ALL)
 rosserial_add_client_target(src arduino_node-upload)
 
+rosserial_add_client_target(src new_arduino_node ALL)
+rosserial_add_client_target(src new_arduino_node-upload)
 #############
 ## Install ##
 #############

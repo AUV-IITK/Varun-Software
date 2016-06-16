@@ -8,8 +8,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <motion_sideward/pidConfig.h>
 #include <string>
-#define minPWM 121
-#define maxPWM 140
+#define minPWM 170
+#define maxPWM 230
 using std::string;
 
 typedef actionlib::SimpleActionServer<motion_commons::SidewardAction> Server;  // defining the Client type
@@ -18,7 +18,6 @@ float presentSidePosition = 0;
 float previousSidePosition = 0;
 float finalSidePosition, error, output;
 bool initData = false;
-int count = 0;
 
 std_msgs::Int32 pwm;  // pwm to be send to arduino
 
@@ -92,7 +91,7 @@ public:
     if (!sidewardServer_.isActive())
       return;
 
-    while (!sidewardServer_.isPreemptRequested() && ros::ok() && count<10)
+    while (!sidewardServer_.isPreemptRequested() && ros::ok())
     {
       error = finalSidePosition - presentSidePosition;
       integral += (error * dt);
@@ -132,7 +131,7 @@ public:
         pwm.data = 0;
         PWM.publish(pwm);
         ROS_INFO("thrusters stopped");
-        count++;
+        break;
       }
 
       if (sidewardServer_.isPreemptRequested() || !ros::ok())
@@ -143,14 +142,6 @@ public:
         reached = false;
         break;
       }
-    }
-
-    if (reached)
-    {
-      result_.Result = reached;
-      ROS_INFO("%s: Succeeded", action_name_.c_str());
-      // set the action state to succeeded
-      sidewardServer_.setSucceeded(result_);
     }
   }
   void sidewardOutputPWMMapping(float output)

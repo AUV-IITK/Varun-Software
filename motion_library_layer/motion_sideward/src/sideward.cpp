@@ -8,8 +8,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <motion_sideward/pidConfig.h>
 #include <string>
-#define minPWM 121
-#define maxPWM 140
+#define minPWM 150
+#define maxPWM 200
 using std::string;
 
 typedef actionlib::SimpleActionServer<motion_commons::SidewardAction> Server;  // defining the Client type
@@ -92,7 +92,7 @@ public:
     if (!sidewardServer_.isActive())
       return;
 
-    while (!sidewardServer_.isPreemptRequested() && ros::ok() && count<10)
+    while (!sidewardServer_.isPreemptRequested() && ros::ok() && count < 10)
     {
       error = finalSidePosition - presentSidePosition;
       integral += (error * dt);

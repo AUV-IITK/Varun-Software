@@ -30,19 +30,19 @@
 /************************ for New Ground Testing Bot *******************/
 #define led 13  // 13
 
-#define pwmPinWest 7          // 3
-#define pwmPinEast 6          // 2
+#define pwmPinWest 6          // 3
+#define pwmPinEast 5          // 2
 #define directionPinWest1 23  // 31
 #define directionPinWest2 22  // 30
 #define directionPinEast1 24  // 33
 #define directionPinEast2 25  // 32
 
 #define pwmPinNorthSway 4          // 3
-#define pwmPinSouthSway 5          // 2
-#define directionPinNorthSway1 28  // 31
-#define directionPinNorthSway2 29  // 30
-#define directionPinSouthSway1 27  // 33
-#define directionPinSouthSway2 26  // 32
+#define pwmPinSouthSway 3          // 2
+#define directionPinNorthSway1 27  // 31
+#define directionPinNorthSway2 26  // 30
+#define directionPinSouthSway1 28  // 33
+#define directionPinSouthSway2 29  // 32
 
 #define pwmPinNorthUp 13        // 3
 #define pwmPinSouthUp 13        // 2
@@ -50,45 +50,14 @@
 #define directionPinNorthUp2 0  // 30
 #define directionPinSouthUp1 0  // 33
 #define directionPinSouthUp2 0  // 32
-                                /************************ for old ground bot ******************************/
-                                // #define pwmPinWest 4
-                                // #define pwmPinEast 5
-                                // #define directionPinWest1 2
-                                // #define directionPinWest2 3
-                                // #define directionPinEast1 7
-                                // #define directionPinEast2 6
-                                // #define led 13
-
-// M represent the slop of the line of the calibrated thruster data preceeding by its model
-// C represent the y-intercept of the calibrated thruster data preceeding by its model
-#define C0090 849.27
-#define M0090 3.89
-#define C0093 444.55 //reference
-#define M0093 2.86   //reference
-#define C0113 568.48
-#define M0113 3.62
-#define C0122 547.19
-#define M0122 2.92
-
-float thruster_0090(int pwm)
-{
-  return (C0090 - C0093 + M0093 * pwm) / M0090;
-}
-
-float thruster_0093(int pwm)
-{
-  return pwm;
-}
-
-float thruster_0122(int pwm)
-{
-  return (C0122 - C0093 + M0093 * pwm) / M0122;
-}
-
-float thruster_0113(int pwm)
-{
-  return (C0113 - C0093 + M0093 * pwm) / M0113;
-}
+/************************ for old ground bot ******************************/
+// #define pwmPinWest 4
+// #define pwmPinEast 5
+// #define directionPinWest1 2
+// #define directionPinWest2 3
+// #define directionPinEast1 7
+// #define directionPinEast2 6
+// #define led 13
 
 int Delay = 1500;
 bool isMovingForward = true;
@@ -96,7 +65,6 @@ ros::NodeHandle nh;
 
 void thrusterNorthUp(int pwm, int isUpward)
 {
-  pwm = thruster_0090(pwm);
   analogWrite(pwmPinNorthUp, pwm);
   if (isUpward)
   {
@@ -112,7 +80,6 @@ void thrusterNorthUp(int pwm, int isUpward)
 
 void thrusterSouthUp(int pwm, int isUpward)
 {
-  pwm = thruster_0093(pwm);
   analogWrite(pwmPinSouthUp, pwm);
   if (isUpward)
   {
@@ -128,7 +95,6 @@ void thrusterSouthUp(int pwm, int isUpward)
 
 void thrusterNorthSway(int pwm, int isRight)
 {
-  pwm = thruster_0122(pwm);
   analogWrite(pwmPinNorthSway, pwm);
   if (isRight)
   {
@@ -144,7 +110,6 @@ void thrusterNorthSway(int pwm, int isRight)
 
 void thrusterSouthSway(int pwm, int isRight)
 {
-  pwm = thruster_0113(pwm);
   analogWrite(pwmPinSouthSway, pwm);
   if (isRight)
   {

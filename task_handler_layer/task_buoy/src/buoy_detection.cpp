@@ -11,6 +11,10 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv/highgui.h>
+#include <image_transport/image_transport.h>
+#include "std_msgs/Float32MultiArray.h"
+#include <cv_bridge/cv_bridge.h>
+#include <sstream>
 #include "std_msgs/Float64MultiArray.h"
 #define D 10
 #include <sstream>
@@ -21,6 +25,26 @@ void lineDetectedListener(std_msgs::Bool msg)
 {
   IP = msg.data;
   std::cout << "hi callback";
+}
+
+cv::Mat frame;
+cv::Mat newframe;
+int count = 0;
+
+void imageCallback(const sensor_msgs::ImageConstPtr &msg)
+{
+  try
+  {
+    count++;
+    std::cout<<"imageCallback"<<count<<std::endl;
+    // imshow("view", cv_bridge::toCvShare(msg, "bgr8")->image);
+    newframe=cv_bridge::toCvShare(msg, "bgr8")->image;
+    cv::imshow("newframe",newframe);
+  }
+  catch (cv_bridge::Exception &e)
+  {
+    ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
+  }
 }
 
 int main(int argc, char* argv[])
@@ -34,7 +58,9 @@ int main(int argc, char* argv[])
   // ROS_INFO("asa");
   ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("balls", 1000);
   ros::Subscriber sub = n.subscribe<std_msgs::Bool>("/balls_off", 1000, &lineDetectedListener);
-  ros::Rate loop_rate(1000);
+  ros::Rate loop_rate(10);
+  
+  image_transport::ImageTransport it(n); 
 
   CvMat* threshold_matrix = cvCreateMat(2, 3, CV_32FC1);
 
@@ -56,6 +82,8 @@ int main(int argc, char* argv[])
 
   int camno = (**(argv + 1) - '0');
   cv::VideoCapture cap(camno);
+  image_transport::Subscriber sub1 = it.subscribe("camera/image", 1, imageCallback);
+        std::cout<<"in while"<<std::endl;
 
   //*****************************************************************************************************************\\
 
@@ -63,11 +91,11 @@ int main(int argc, char* argv[])
 
   //*****************************************************************************************************************\\
     // Create a window in which the captured images will be presented
-  cvNamedWindow("Contours", CV_WINDOW_NORMAL);
-  cvNamedWindow("F1", CV_WINDOW_NORMAL);
-  cvNamedWindow("RealPic", CV_WINDOW_NORMAL);
-  cvNamedWindow("F2", CV_WINDOW_NORMAL);
-  cvNamedWindow("F3", CV_WINDOW_NORMAL);
+  // cvNamedWindow("Contours", CV_WINDOW_NORMAL);
+  // cvNamedWindow("F1", CV_WINDOW_NORMAL);
+  // cvNamedWindow("RealPic", CV_WINDOW_NORMAL);
+  // cvNamedWindow("F2", CV_WINDOW_NORMAL);
+  // cvNamedWindow("F3", CV_WINDOW_NORMAL);
 
   /// Create Trackbars
   char TrackbarName1[50] = "t1min";
@@ -112,28 +140,36 @@ int main(int argc, char* argv[])
   {
     if (!IP)
     {
+      loop_rate.sleep();
+      frame = newframe.clone();
+      cv::imshow("view",newframe);
+      cv::imshow("frame",frame);
       std_msgs::Float64MultiArray array;
       // Get one frame
 
-      if (!cap.isOpened())
-      {
-        fprintf(stderr, "ERROR: frame is null...\n");
-        getchar();
-        break;
-      }
+      // if (!cap.isOpened())
+      // {
+      //   fprintf(stderr, "ERROR: frame is null...\n");
+      //   getchar(); 
+      //   break;
+      // }
 
-      cv::Mat frame;
-      cap >> frame;
+      // cv::Mat frame;
+      // cap >> frame;
 
       if (frame.empty())
+      {
+        std::cout << "empty frame \n";
+        ros::spinOnce();
         continue;
+      }
       // get the image data
       height = frame.rows;
       width = frame.cols;
       step = frame.step;
       // frame = cvQueryFrame( capture );
 
-      cv::imshow("RealPic", frame);
+      // cv::imshow("RealPic", frame);
 
       // Covert color space to HSV as it is much easier to filter colors in the HSV color-space.
       cv::cvtColor(frame, hsv_frame, CV_BGR2HSV);
@@ -150,13 +186,13 @@ int main(int argc, char* argv[])
       cv::inRange(thresholded_hsv[1], cv::Scalar(t2min, 0, 0, 0), cv::Scalar(t2max, 0, 0, 0), thresholded_hsv[1]);
       cv::inRange(thresholded_hsv[2], cv::Scalar(t3min, 0, 0, 0), cv::Scalar(t3max, 0, 0, 0), thresholded_hsv[2]);
 
-      cv::imshow("F1", thresholded_hsv[0]);  // individual filters
-      cv::imshow("F2", thresholded_hsv[1]);
-      cv::imshow("F3", thresholded_hsv[2]);
+      // cv::imshow("F1", thresholded_hsv[0]);  // individual filters
+      // cv::imshow("F2", thresholded_hsv[1]);
+      // cv::imshow("F3", thresholded_hsv[2]);
 
       // Memory for hough circles
       CvMemStorage* storage = cvCreateMemStorage(0);
-      cv::imshow("After Color Filtering", thresholded);  // The stream after color filtering
+      // cv::imshow("After Color Filtering", thresholded);  // The stream after color filtering
       // hough detector works better with some smoothing of the image
       cv::GaussianBlur(thresholded, thresholded, cv::Size(9, 9), 0, 0, 0);
 
@@ -165,10 +201,23 @@ int main(int argc, char* argv[])
       cv::Mat thresholded_Mat = thresholded;
       cv::findContours(thresholded_Mat, contours, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);  // Find the contours
       double largest_area = 0, largest_contour_index = 0;
-      cv::imshow("Contours", thresholded_Mat);  // The stream after color filterin
+      // cv::imshow("Contours", thresholded_Mat);  // The stream after color filterin
 
-      if (contours.empty())
+      if (contours.empty()){
+        array.data.push_back(0);
+        array.data.push_back(0); 
+        array.data.push_back(0);
+        array.data.push_back(0);
+        array.data.push_back(0); 
+        array.data.push_back(0);
+        // cv::imshow( "circle", circles ); // Original stream with detected ball overlay
+        pub.publish(array); 
+        ros::spinOnce();
+        //If ESC key pressed, Key=0x10001B under OpenCV 0.9.7(linux version),
+        //remove higher bits using AND operator
+        if( (cvWaitKey(10) & 255) == 27 ) break;
         continue;
+      }
 
       for (int i = 0; i < contours.size(); i++)  // iterate through each contour.
       {
@@ -219,11 +268,12 @@ int main(int argc, char* argv[])
       // imshow("F1", thresholded1);  // individual filters
       // imshow("F2", thresholded2);
       // imshow("F3", thresholded3);
-      cv::imshow("circle", circles);  // Original stream with detected ball overlay
+      // cv::imshow("circle", circles);  // Original stream with detected ball overlay
 
       cvReleaseMemStorage(&storage);
 
       ros::spinOnce();
+
       // If ESC key pressed, Key=0x10001B under OpenCV 0.9.7(linux version),
       // remove higher bits using AND operator
       if ((cvWaitKey(10) & 255) == 27)

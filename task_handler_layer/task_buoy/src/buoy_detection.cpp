@@ -21,7 +21,7 @@
 bool IP = true;
 bool flag = false;
 bool video = false;
-int t1min = 0, t1max = 100, t2min = 10, t2max = 260, t3min = 185, t3max = 260;  // Default Params
+int t1min = 170, t1max = 190, t2min = 229, t2max = 260, t3min = 228, t3max = 260;  // Default Params
 
 cv::Mat frame;
 cv::Mat newframe;
@@ -62,23 +62,25 @@ int main(int argc, char *argv[])
     std::string avi = ".avi";
     Video_Name = (argv[2]) + avi;
   }
-  printf("sssss\n");
+
   cv::VideoWriter output_cap(Video_Name, CV_FOURCC('D', 'I', 'V', 'X'), 9, cv::Size(640, 480));
-  printf("ssssssdssdss\n");
+
   ros::init(argc, argv, "buoy_detection");
   ros::NodeHandle n;
-  ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("balls", 1000);
-  ros::Subscriber sub = n.subscribe<std_msgs::Bool>("/balls_off", 1000, &lineDetectedListener);
+  ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("/varun/ip/buoy", 1000);
+  ros::Subscriber sub = n.subscribe<std_msgs::Bool>("buoy_detection_switch", 1000, &lineDetectedListener);
   ros::Rate loop_rate(10);
 
   image_transport::ImageTransport it(n);
-  image_transport::Subscriber sub1 = it.subscribe("camera/image", 1, imageCallback);
+  image_transport::Subscriber sub1 = it.subscribe("/varun/sensors/front_camera/image_raw", 1, imageCallback);
 
   if (flag)
   {
-    cvNamedWindow("Contours", CV_WINDOW_NORMAL);
+    if (!IP)
+      cvNamedWindow("Contours", CV_WINDOW_NORMAL);
     cvNamedWindow("F1", CV_WINDOW_NORMAL);
-    cvNamedWindow("circle", CV_WINDOW_NORMAL);
+    if (!IP)
+      cvNamedWindow("circle", CV_WINDOW_NORMAL);
     cvNamedWindow("F2", CV_WINDOW_NORMAL);
     cvNamedWindow("F3", CV_WINDOW_NORMAL);
 
@@ -97,44 +99,44 @@ int main(int argc, char *argv[])
 
   cv::Mat hsv_frame, thresholded, thresholded1, thresholded2, thresholded3, filtered;  // image converted to HSV plane
 
-  std_msgs::Float64MultiArray array;
   while (1)
   {
+    std_msgs::Float64MultiArray array;
+    loop_rate.sleep();
+
+    if (frame.empty())
+    {
+      std::cout << "empty frame \n";
+      ros::spinOnce();
+      continue;
+    }
+
+    if (video)
+      output_cap.write(frame);
+
+    // get the image data
+    height = frame.rows;
+    width = frame.cols;
+    step = frame.step;
+
+    // Covert color space to HSV as it is much easier to filter colors in the HSV color-space.
+    cv::cvtColor(frame, hsv_frame, CV_BGR2HSV);
+    cv::Scalar hsv_min = cv::Scalar(t1min, t2min, t3min, 0);
+    cv::Scalar hsv_max = cv::Scalar(t1max, t2max, t3max, 0);
+    // Filter out colors which are out of range.
+    cv::inRange(hsv_frame, hsv_min, hsv_max, thresholded);
+    // Split image into its 3 one dimensional images
+    cv::Mat thresholded_hsv[3];
+    cv::split(hsv_frame, thresholded_hsv);
+
+    // Filter out colors which are out of range.
+    cv::inRange(thresholded_hsv[0], cv::Scalar(t1min, 0, 0, 0), cv::Scalar(t1max, 0, 0, 0), thresholded_hsv[0]);
+    cv::inRange(thresholded_hsv[1], cv::Scalar(t2min, 0, 0, 0), cv::Scalar(t2max, 0, 0, 0), thresholded_hsv[1]);
+    cv::inRange(thresholded_hsv[2], cv::Scalar(t3min, 0, 0, 0), cv::Scalar(t3max, 0, 0, 0), thresholded_hsv[2]);
+    cv::GaussianBlur(thresholded, thresholded, cv::Size(9, 9), 0, 0, 0);
+
     if (!IP)
     {
-      loop_rate.sleep();
-
-      if (frame.empty())
-      {
-        std::cout << "empty frame \n";
-        ros::spinOnce();
-        continue;
-      }
-
-      if (video)
-        output_cap.write(frame);
-
-      // get the image data
-      height = frame.rows;
-      width = frame.cols;
-      step = frame.step;
-
-      // Covert color space to HSV as it is much easier to filter colors in the HSV color-space.
-      cv::cvtColor(frame, hsv_frame, CV_BGR2HSV);
-      cv::Scalar hsv_min = cv::Scalar(t1min, t2min, t3min, 0);
-      cv::Scalar hsv_max = cv::Scalar(t1max, t2max, t3max, 0);
-      // Filter out colors which are out of range.
-      cv::inRange(hsv_frame, hsv_min, hsv_max, thresholded);
-      // Split image into its 3 one dimensional images
-      cv::Mat thresholded_hsv[3];
-      cv::split(hsv_frame, thresholded_hsv);
-
-      // Filter out colors which are out of range.
-      cv::inRange(thresholded_hsv[0], cv::Scalar(t1min, 0, 0, 0), cv::Scalar(t1max, 0, 0, 0), thresholded_hsv[0]);
-      cv::inRange(thresholded_hsv[1], cv::Scalar(t2min, 0, 0, 0), cv::Scalar(t2max, 0, 0, 0), thresholded_hsv[1]);
-      cv::inRange(thresholded_hsv[2], cv::Scalar(t3min, 0, 0, 0), cv::Scalar(t3max, 0, 0, 0), thresholded_hsv[2]);
-      cv::GaussianBlur(thresholded, thresholded, cv::Size(9, 9), 0, 0, 0);
-
       // find contours
       std::vector<std::vector<cv::Point> > contours;
       cv::Mat thresholded_Mat = thresholded;
@@ -220,8 +222,16 @@ int main(int argc, char *argv[])
       if ((cvWaitKey(10) & 255) == 27)
         break;
     }
+
     else
     {
+      if (flag)
+      {
+        cv::imshow("After Color Filtering", thresholded);  // The stream after color filtering
+        cv::imshow("F1", thresholded_hsv[0]);              // individual filters
+        cv::imshow("F2", thresholded_hsv[1]);
+        cv::imshow("F3", thresholded_hsv[2]);
+      }
       std::cout << "waiting\n";
       ros::spinOnce();
     }

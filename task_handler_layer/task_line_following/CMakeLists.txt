@@ -16,8 +16,9 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   task_commons
   motion_commons
+  image_transport
+  cv_bridge
 )
-
 ## Check for lint errors
 roslint_cpp()
 
@@ -142,6 +143,7 @@ target_link_libraries(line_angle ${catkin_LIBRARIES})
 target_link_libraries(line_angle  ${OpenCV_LIBS})
 target_link_libraries(line_angle_server ${catkin_LIBRARIES})
 target_link_libraries(line_angle_client ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############

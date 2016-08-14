@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(task_line_detection)
+project(task_gate)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   task_commons
   motion_commons
   cv_bridge
+  sensor_msgs
   image_transport
   dynamic_reconfigure
 )
@@ -24,7 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
 roslint_cpp()
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system)
 find_package( OpenCV REQUIRED )
 
 
@@ -44,9 +45,8 @@ find_package( OpenCV REQUIRED )
 ## * In the file package.xml:
 ##   * add a build_depend tag for "message_generation"
 ##   * add a build_depend and a run_depend tag for each package in MSG_DEP_SET
-##   * If MSG_DEP_SET isn't empty the following dependencies might have been
-##     pulled in transitively but can be declared for certainty nonetheless:
-##     * add a build_depend tag for "message_generation"
+##   * If MSG_DEP_SET isn't empty the following dependency has been pulled in
+##     but can be declared for certainty nonetheless:
 ##     * add a run_depend tag for "message_runtime"
 ## * In this file (CMakeLists.txt):
 ##   * add "message_generation" and every package in MSG_DEP_SET to
@@ -72,10 +72,22 @@ find_package( OpenCV REQUIRED )
 #   Service2.srv
 # )
 
-#generate_messages(
-#  DEPENDENCIES
-# std_msgs
-#)
+## Generate actions in the 'action' folder
+# add_action_files(
+#   FILES
+#   Action1.action
+#   Action2.action
+# )
+
+## Generate added messages and services with any dependencies listed here
+# generate_messages(
+#   DEPENDENCIES
+#   actionlib_msgs#   std_msgs
+# )
+
+################################################
+## Declare ROS dynamic reconfigure parameters ##
+################################################
 
 ## To declare and build dynamic reconfigure parameters within this
 ## package, follow these steps:
@@ -88,10 +100,9 @@ find_package( OpenCV REQUIRED )
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-generate_dynamic_reconfigure_options(
-  cfg/orange.cfg
-)
-#option for reconfig cfg
+ generate_dynamic_reconfigure_options(
+   cfg/gate.cfg   
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -102,11 +113,16 @@ generate_dynamic_reconfigure_options(
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+#   sensor_msgs
+# )
 
 catkin_package(
   #  INCLUDE_DIRS include
-  #  LIBRARIES task_line_detection
-  CATKIN_DEPENDS actionlib actionlib_msgs message_generation roscpp rospy std_msgs task_commons motion_commons
+  #  LIBRARIES task_gate
+  CATKIN_DEPENDS roscpp rospy std_msgs actionlib actionlib_msgs message_generation task_commons motion_commons
   #  DEPENDS system_lib
 )
 
@@ -118,33 +134,40 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(include
-  ${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
 )
-## Declare a cpp library
-# add_library(task_line_detection
-#   src/${PROJECT_NAME}/task_line_detection.cpp
+
+add_executable(gate_detection src/gate_detection.cpp)
+add_executable(gate_server src/gate_server.cpp)
+add_executable(gate_client src/gate_client.cpp)
+target_link_libraries(gate_detection ${OpenCV_LIBS} )
+target_link_libraries(gate_detection ${catkin_LIBRARIES})
+target_link_libraries(gate_server ${catkin_LIBRARIES})
+target_link_libraries(gate_client ${catkin_LIBRARIES})
+
+## Declare a C++ library
+# add_library(task_gate
+#   src/${PROJECT_NAME}/task_gate.cpp
 # )
 
-## Declare a cpp executable
-# add_executable(task_line_detection_node src/task_line_detection_node.cpp)
-add_executable(line_detection src/line_detection.cpp)
-add_executable(line_detection_server src/line_detection_server.cpp)
-add_executable(line_detection_client src/line_detection_client.cpp)
+## Add cmake target dependencies of the library
+## as an example, code may need to be generated before libraries
+## either from message generation or dynamic reconfigure
+# add_dependencies(task_gate ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(task_line_detection_node task_line_detection_generate_messages_cpp)
+## Declare a C++ executable
+# add_executable(task_gate_node src/task_gate_node.cpp)
+
+## Add cmake target dependencies of the executable
+## same as for the library above
+# add_dependencies(task_gate_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(task_line_detection_node
+# target_link_libraries(task_gate_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(line_detection ${catkin_LIBRARIES})
-target_link_libraries(line_detection ${OpenCV_LIBS})
-target_link_libraries(line_detection_server ${catkin_LIBRARIES})
-target_link_libraries(line_detection_client ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
@@ -160,7 +183,7 @@ target_link_libraries(line_detection_client ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS task_line_detection task_line_detection_node
+# install(TARGETS task_gate task_gate_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -185,7 +208,7 @@ target_link_libraries(line_detection_client ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_task_line_detection.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_task_gate.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

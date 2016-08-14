@@ -13,141 +13,19 @@
 #include <opencv/highgui.h>
 #include <image_transport/image_transport.h>
 #include "std_msgs/Float64MultiArray.h"
-#include "std_msgs/Float64.h"
 #include <cv_bridge/cv_bridge.h>
 #include <sstream>
 #include <string>
-
-
-
-using cv::Mat;
-using cv::split;
-using cv::Size;
-using cv::Scalar;
-using cv::normalize;
-using cv::Point;
-using cv::VideoCapture;
-using cv::NORM_MINMAX;
-using cv::MORPH_ELLIPSE;
-using cv::COLOR_BGR2HSV;
-using cv::destroyAllWindows;
-using cv::getStructuringElement;
-using cv::Vec4i;
-using cv::namedWindow;
-using std::vector;
-using std::endl;
-using std::cout;
-
-
 
 int w = -2, x = -2, y = -2, z = -2;
 bool IP = true;
 bool flag = false;
 bool video = false;
-int t1min = 0, t1max = 88, t2min = 89, t2max = 251, t3min = 0, t3max = 255, lineCount = 0;  // Default Params
-
-std_msgs::Float64 msg;
-// parameters in param file should be nearly the same as the commented values
-// params for an orange strip
-int LowH = 0;   // 0
-int HighH = 88;  // 88
-
-int LowS = 0;   // 0
-int HighS = 251;  // 251
-
-int LowV = 0;   // 0
-int HighV = 255;  // 255
-
-// params for hough line transform
-int lineThresh = 60;     // 60
-int minLineLength = 70;  // 70
-int maxLineGap = 10;     // 10
-int houghThresh = 15;    // 15
-
-double rho = 0.1;
-double finalAngle = -1;
-double minDeviation = 0.02;
-
+int t1min = 0, t1max = 130, t2min = 0, t2max = 100, t3min = 150, t3max = 260;  // Default Params
 
 cv::Mat frame;
-cv::Mat newframe, sent_to_callback, imgLines;
+cv::Mat newframe;
 int count = 0, count_avg = 0;
-
-
-double computeMean(vector<double> &newAngles)
-{
-  double sum = 0;
-  for (size_t i = 0; i < newAngles.size(); i++)
-  {
-    sum = sum + newAngles[i];
-  }
-  return sum / newAngles.size();
-}
-// called when few lines are detected
-// to remove errors due to any stray results
-double computeMode(vector<double> &newAngles)
-{
-  double mode = newAngles[0];
-  int freq = 1;
-  int tempFreq;
-  double diff;
-  for (int i = 0; i < newAngles.size(); i++)
-  {
-    tempFreq = 1;
-
-    for (int j = i + 1; j < newAngles.size(); j++)
-    {
-      diff = newAngles[j] - newAngles[i] > 0.0 ? newAngles[j] - newAngles[i] : newAngles[i] - newAngles[j];
-      if (diff <= minDeviation)
-      {
-        tempFreq++;
-        newAngles.erase(newAngles.begin() + j);
-        j = j - 1;
-      }
-    }
-
-    if (tempFreq >= freq)
-    {
-      mode = newAngles[i];
-      freq = tempFreq;
-    }
-  }
-
-  return mode;
-}
-
-void callback(int, void *)
-{
-  vector<Vec4i> lines;
-  HoughLinesP(sent_to_callback, lines, 1, CV_PI / 180, lineThresh, minLineLength, maxLineGap);
-
-  frame.copyTo(imgLines);
-  imgLines = Scalar(0, 0, 0);
-  vector<double> angles(lines.size());
-
-  lineCount = lines.size();
-  int j = 0;
-  for (size_t i = 0; i < lines.size(); i++)
-  {
-    Vec4i l = lines[i];
-    line(imgLines, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 255, 0), 1, CV_AA);
-    if ((l[2] == l[0]) || (l[1] == l[3])) continue;
-    angles[j] = atan(static_cast<double>(l[2] - l[0]) / (l[1] - l[3]));
-    j++;
-  }
-
-  imshow("LINES", imgLines + frame);
-
-  // if num of lines are large than one or two stray lines won't affect the mean
-  // much
-  // but if they are small in number than mode has to be taken to save the error
-  // due to those stray line
-
-  if (lines.size() > 0 && lines.size() < 10)
-    finalAngle = computeMode(angles);
-  else if (lines.size() > 0)
-    finalAngle = computeMean(angles);
-}
 
 void gateListener(std_msgs::Bool msg)
 {
@@ -190,7 +68,7 @@ int main(int argc, char* argv[])
   ros::init(argc, argv, "gate_detection");
   ros::NodeHandle n;
 
-  ros::Publisher pub = n.advertise<std_msgs::Float64>("/varun/ip/lineAngle", 1000);
+  ros::Publisher pub = n.advertise<std_msgs::Float64MultiArray>("/varun/ip/gate", 1000);
   ros::Subscriber sub = n.subscribe<std_msgs::Bool>("gate_detection_switch", 1000, &gateListener);
   ros::Rate loop_rate(10);
 
@@ -199,7 +77,7 @@ int main(int argc, char* argv[])
 
   cvNamedWindow("After Color Filtering", CV_WINDOW_NORMAL);
   cvNamedWindow("Contours", CV_WINDOW_NORMAL);
-  cvNamedWindow("LINES", CV_WINDOW_NORMAL);
+  cvNamedWindow("RealPic", CV_WINDOW_NORMAL);
 
   if (flag)
   {
@@ -214,6 +92,8 @@ int main(int argc, char* argv[])
     cvCreateTrackbar("t3min", "F3", &t3min, 260, NULL);
     cvCreateTrackbar("t3max", "F3", &t3max, 260, NULL);
   }
+
+
   // capture size -
   CvSize size = cvSize(width, height);
 
@@ -223,7 +103,9 @@ int main(int argc, char* argv[])
 
   while (ros::ok())
   {
+    std_msgs::Float64MultiArray array;
     loop_rate.sleep();
+
     // Get one frame
     if (frame.empty())
     {
@@ -277,10 +159,13 @@ int main(int argc, char* argv[])
       cv::Mat thresholded_Mat = thresholded;
       findContours(thresholded_Mat, contours, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);  // Find the contours in the image
       double largest_area = 0, largest_contour_index = 0;
+
       if (contours.empty())
       {
-        msg.data = -finalAngle * (180 / 3.14)+90;
-        pub.publish(msg);
+        array.data.push_back(0);
+        array.data.push_back(0);
+
+        pub.publish(array);
         ros::spinOnce();
         // If ESC key pressed, Key=0x10001B under OpenCV 0.9.7(linux version),
         // remove higher bits using AND operator
@@ -305,22 +190,57 @@ int main(int argc, char* argv[])
       cv::Mat Drawing(thresholded_Mat.rows, thresholded_Mat.cols, CV_8UC1, cv::Scalar::all(0));
       std::vector<cv::Vec4i> hierarchy;
       cv::Scalar color(255, 255, 255);
-      drawContours(Drawing, contours, largest_contour_index, color, 2, 8, hierarchy);
-      cv::imshow("Contours", Drawing);
 
-      std_msgs::Float64 msg;
-      Drawing.copyTo(sent_to_callback);
-      /*
-      msg.data never takes positive 90
-      when the angle is 90 it will show -90
-      -------------TO BE CORRECTED-------------
-      */
-      msg.data = -finalAngle * (180 / 3.14)+90;
-      if (lineCount > 0)
+      std::vector<cv::Rect> boundRect(1);
+
+      boundRect[0] = boundingRect(cv::Mat(contours[largest_contour_index]));
+
+      rectangle(Drawing, boundRect[0].tl(), boundRect[0].br(), color, 2, 8, 0);
+
+      cv::Point center;
+      center.x = ((boundRect[0].br()).x + (boundRect[0].tl()).x) / 2;
+      center.y = ((boundRect[0].tl()).y + (boundRect[0].br()).y) / 2;
+
+      drawContours(Drawing, contours, largest_contour_index, color, 2, 8, hierarchy);
+
+      cv::Mat frame_mat = frame;
+      cv::Point2f screen_center;
+      screen_center.x = 320;  // size of my screen
+      screen_center.y = 240;
+
+      circle(frame_mat, center, 5, cv::Scalar(0, 250, 0), -1, 8, 1);
+      rectangle(frame_mat, boundRect[0].tl(), boundRect[0].br(), color, 2, 8, 0);
+      circle(frame_mat, screen_center, 4, cv::Scalar(150, 150, 150), -1, 8, 0);            // center of screen
+
+            cv::imshow("Contours", Drawing);
+      cv::imshow("RealPic", frame_mat);
+
+      w = (boundRect[0].br()).x;
+      x = (boundRect[0].br()).y;
+      y = (boundRect[0].tl()).y;
+      z = (boundRect[0].tl()).x;
+      if (w == (frame.rows)-1 || x == (frame.cols)-1 || y == 1 || z == 1)
       {
-        pub.publish(msg);
+        std::cout << "hitting the wall\n";
+        if ( y == 1)
+           array.data.push_back(-1);  //  hits top
+        if ( z == 1)
+          array.data.push_back(-2);  //  hits left
+        if ( w == frame.rows-1)
+          array.data.push_back(-3);  //  hits bottom
+        if ( x == frame.cols-1)
+          array.data.push_back(-4);  //  hits right
+        ros::spinOnce();
+        continue;
       }
-      callback(0, 0);        // for displaying the thresholded image initially
+      std::cout << w << " " << x << " " << y << " " << z << "\n" << frame.cols << "  frame  " << frame.rows << "\n";
+
+      array.data.push_back((320 - center.x));
+      array.data.push_back(-(240 - center.y));
+      pub.publish(array);
+
+
+
       ros::spinOnce();
       // loop_rate.sleep();
 

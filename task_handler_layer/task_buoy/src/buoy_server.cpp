@@ -20,6 +20,8 @@
 #include <motion_commons/UpwardActionResult.h>
 #include <motion_commons/SidewardActionResult.h>
 #include <string>
+#include <dynamic_reconfigure/server.h>
+#include <task_buoy/buoyConfig.h>
 
 typedef actionlib::SimpleActionServer<task_commons::buoyAction> Server;
 typedef actionlib::SimpleActionClient<motion_commons::ForwardAction> ClientForward;
@@ -259,7 +261,21 @@ public:
     msg.data = true;
     switch_buoy_detection.publish(msg);
   }
+
+  void setreconfig(int new_upward_loop, int new_sideward_loop)
+  {
+    upwardgoal.loop = new_upward_loop;
+    sidewardgoal.loop = new_sideward_loop;
+  }
 };
+
+TaskBuoyInnerClass *object;
+
+void callback(task_buoy::buoyConfig &config, uint32_t level)
+{
+  ROS_INFO("Buoy_Reconfigure Request:New params : %d %d", config.upward_loop, config.sideward_loop);
+  object->setreconfig(config.upward_loop, config.sideward_loop);
+}
 
 int main(int argc, char **argv)
 {

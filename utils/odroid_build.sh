@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script compiles all the packages in auv repo except the ones not required on odroid.
+# This script compiles all the packages in auv2016 repo except the ones not required on odroid.
 #
 # compiling individual pkgs is prefered because it helps maintain a list of all the pkgs
 # xyz_commons folder contain actionlib files on which other pkgs depend, so they are

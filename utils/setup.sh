@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script downloads and installs all the dependencies of packages in auv repo.
+# This script installs all the dependencies of packages in auv2016 repo.
 #
 ROS_DISTRO=$'indigo'
 
@@ -72,4 +72,4 @@ echo "Please add these to your ~/.bashrc file"
 echo "source /opt/ros/$ROS_DISTRO/setup.sh"
 echo "source /usr/share/gazebo-7/setup.sh"
 echo "For using gazebosim on your system plz install by running #curl -ssL http://get.gazebosim.org | sh"
-echo "and configure these settings #export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH/home/$USER/catkin_ws/src/auv/debug_layer/:/home/$USER/catkin_ws/src/auv/debug_layer/varun_gazebo/models/:"
+echo "and configure these settings #export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH/home/$USER/catkin_ws/src/auv2016/debug_layer/:/home/$USER/catkin_ws/src/auv2016/debug_layer/varun_gazebo/models/:"

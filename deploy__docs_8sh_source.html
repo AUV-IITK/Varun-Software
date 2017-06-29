@@ -94,7 +94,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">function</span> doCompile {</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  ~/catkin_ws/src/auv/utils/generate_docs.sh</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  ~/catkin_ws/src/auv2016/utils/generate_docs.sh</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;}</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor"># Pull requests and commits to other branches shouldn&#39;t try to deploy, just build to verify</span></div>
@@ -106,20 +106,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor"># Clone the existing gh-pages for this repo into html/</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor"></span><span class="preprocessor"># Create a new empty branch if gh-pages doesn&#39;t exist yet (should only happen on first deply)</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor"></span>git clone  <span class="stringliteral">&quot;https://github.com/AUV-IITK/auv.git&quot;</span> ~/catkin_ws/src/auv/html/</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;cd ~/catkin_ws/src/auv/html/</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor"></span>git clone  <span class="stringliteral">&quot;https://github.com/AUV-IITK/auv2016.git&quot;</span> ~/catkin_ws/src/auv2016/html/</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;cd ~/catkin_ws/src/auv2016/html/</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor"># Save some useful information</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor"></span>export SHA=`git rev-parse --verify HEAD`</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;git checkout -b gh-pages origin/gh-pages</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;cd ..</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor"># Clean html/ existing contents except .git folder</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor"></span>rm -rf ~/catkin_ws/src/auv/html<span class="comment">/*</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor"></span>rm -rf ~/catkin_ws/src/auv2016/html<span class="comment">/*</span></div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="comment"># Run our compile script</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">echo &quot;compile docs&quot;</span></div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment">doCompile</span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="comment"># Now let&#39;s go have some fun with the cloned repo</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="comment">cd ~/catkin_ws/src/auv/html/</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="comment">cd ~/catkin_ws/src/auv2016/html/</span></div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment">echo &quot;git config&quot;</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="comment">git config user.name &quot;Shikher Verma&quot;</span></div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="comment">git config user.email &quot;root@shikherverma.com&quot;</span></div>
@@ -130,11 +130,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">git commit -m &quot;Deploy $SHA&quot;</span></div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment"></span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment"># Now that we&#39;re all set up, we can push.</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment">git push -f -q https://ShikherVerma:$GH_TOKEN@github.com/AUV-IITK/auv.git gh-pages</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment">git push -f -q https://ShikherVerma:$GH_TOKEN@github.com/AUV-IITK/auv2016.git gh-pages</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Dec 4 2016 19:14:02 for AUV by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jun 29 2017 19:27:46 for AUV by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

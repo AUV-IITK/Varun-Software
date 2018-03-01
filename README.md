@@ -1,8 +1,10 @@
-[![Build Status](https://travis-ci.org/AUV-IITK/auv2016.svg?branch=master)](https://travis-ci.org/AUV-IITK/auv2016)
-
 # [AUV Varun](http://auviitk.com/varun.html)
 
-The main objective is to perform tasks like line detection, hitting a buoy,  and dropping markers underwater by using input data from sensors like IMU, monocular cameras, and a pressure sensor.  To decrease the complexity of the task, we broke it down into levels of abstraction with the help of ROS stacks.  
+The main objective is to perform tasks like line detection, hitting a buoy,  and dropping markers underwater by using input data from sensors like IMU, monocular cameras, and a pressure sensor.  To decrease the complexity of the task, we broke it down into levels of abstraction with the help of ROS stacks. 
+
+| S. No. 	| Operating System 	|  ROS Version 	| Build Status 	|
+|:------:	|:----------------:	|:------------:	|:------------:	|
+| 1.     	| [Ubuntu 14.04 LTS](http://releases.ubuntu.com/14.04/) 	| [Indigo Igloo](http://wiki.ros.org/indigo) 	|  [![Build Status](https://travis-ci.org/AUV-IITK/auv2016.svg?branch=master)](https://travis-ci.org/AUV-IITK/auv2016) |
 
 ## Tasks 
 
@@ -30,6 +32,27 @@ The task at hand is gargantuan and needs to be abstracted out into different mod
 * [__task_handler_layer__](task_handler_layer/README.md): implement individual tasks
 * [__motion_library_layer__](motion_library_layer/README.md): handling individual calibrated motion
 * [__hardware_layer__](hardware_layer/README.md)
+
+## How to build the code?
+
+1. Create a catkin worspace following the guidelines given [here](http://wiki.ros.org/catkin/Tutorials/create_a_workspace)
+```bash
+mkdir -p ~/catkin_ws/src
+catkin_init_workspace
+cd ~/catkin_ws/
+catkin_make
+```
+
+2. Clone this repository to your catkin workspace
+```bash
+cd ~/catkin_ws/src
+git clone https://github.com/AUV-IITK/auv2016.git
+```
+
+3. Run the [build.sh](utils/build.sh) script
+```bash
+~/catkin_ws/src/auv2016/build.sh
+```
 
 ## Contribution Guidelines
 
